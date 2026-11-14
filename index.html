@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en-GB" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>%TITLE%</title>
+  <meta name="description" content="%DESCRIPTION%" />
+  <meta name="author" content="%NAME%" />
+  <meta name="theme-color" content="#0b0a14" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#f5f3ee" media="(prefers-color-scheme: light)" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="view-transition" content="same-origin" />
+  <link rel="canonical" href="%URL%" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="%TITLE%" />
+  <meta property="og:description" content="%DESCRIPTION%" />
+  <meta property="og:url" content="%URL%" />
+  <meta property="og:image" content="/assets/photos/hero.webp" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-family='system-ui' font-weight='800' font-size='28' fill='white'%3EVK%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    // Apply saved theme before paint (no flash)
+    try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t;
+      else if (matchMedia('(prefers-color-scheme: light)').matches) document.documentElement.dataset.theme = 'light'; } catch (e) {}
+  </script>
+  <script type="application/ld+json" id="ld"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <div class="preloader" aria-hidden="true">
+    <div class="preloader__count"><span data-count>0</span>%</div>
+    <div class="preloader__bar"><i></i></div>
+  </div>
+
+  <div class="cursor" aria-hidden="true"><div class="cursor__dot"></div><div class="cursor__ring"></div></div>
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="#top" class="nav__logo" aria-label="VK — home" data-magnetic>VK<span>.</span></a>
+    <nav aria-label="Primary">
+      <ul class="nav__links">
+        <li><a href="#about">About</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#projects">Work</a></li>
+        <li><a href="#experience">Journey</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+    <button class="theme-toggle" type="button" aria-label="Toggle colour theme" data-magnetic>
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle class="sun" cx="12" cy="12" r="5"/><g class="rays"><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></g></svg>
+    </button>
+  </header>
+
+  <canvas class="webgl" aria-hidden="true"></canvas>
+
+  <main id="main">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero__inner">
+        <p class="eyebrow hero__eyebrow" data-field="hero-eyebrow"></p>
+        <h1 class="hero__title" id="hero-title"><span class="line" data-split data-field="first"></span><span class="line line--outline" data-split data-field="last"></span></h1>
+        <p class="hero__tagline" data-field="tagline"></p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="#projects" data-magnetic><span>See my work</span></a>
+          <a class="btn btn--ghost" href="#contact" data-magnetic><span>Get in touch</span></a>
+        </div>
+      </div>
+      <figure class="hero__photo tilt" data-photo="hero">
+        <div class="photo-frame">
+          <img alt="Portrait of Vishnutharan Karunakaran" width="640" height="800" fetchpriority="high" decoding="async" />
+          <div class="photo-placeholder" aria-hidden="true"><span>Photo slot<br><code>/assets/photos/hero.webp</code></span></div>
+        </div>
+        <figcaption class="hero__badge"><i></i><span data-field="availability"></span></figcaption>
+      </figure>
+      <div class="hero__scroll" aria-hidden="true"><span>Scroll</span><i></i></div>
+    </section>
+
+    <section class="marquee" aria-hidden="true"><div class="marquee__track" data-marquee></div></section>
+
+    <section class="about section" id="about" aria-labelledby="about-title">
+      <div class="about__grid">
+        <figure class="about__photo tilt reveal" data-photo="about">
+          <div class="photo-frame">
+            <img alt="Vishnutharan Karunakaran" width="600" height="750" loading="lazy" decoding="async" />
+            <div class="photo-placeholder" aria-hidden="true"><span>Photo slot<br><code>/assets/photos/about.webp</code></span></div>
+          </div>
+        </figure>
+        <div class="about__text">
+          <p class="eyebrow">01 — About</p>
+          <h2 id="about-title" class="h2" data-split-words data-field="about-heading"></h2>
+          <div class="about__body" data-field="about-body"></div>
+          <dl class="facts" data-field="facts"></dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="skills section" id="skills" aria-labelledby="skills-title">
+      <p class="eyebrow">02 — Toolkit</p>
+      <h2 id="skills-title" class="h2 big-scrub" data-scrub-text>Tools I build with</h2>
+      <div class="skills__grid" data-field="skills"></div>
+    </section>
+
+    <section class="projects" id="projects" aria-labelledby="projects-title">
+      <div class="projects__pin">
+        <div class="projects__head">
+          <p class="eyebrow">03 — Selected work</p>
+          <h2 id="projects-title" class="h2">Projects <span class="muted">from GitHub</span></h2>
+          <p class="projects__hint muted">Scroll to explore →</p>
+        </div>
+        <ul class="projects__track" data-field="projects" role="list"></ul>
+      </div>
+    </section>
+
+    <section class="experience section" id="experience" aria-labelledby="exp-title">
+      <p class="eyebrow">04 — Journey</p>
+      <h2 id="exp-title" class="h2">Experience &amp; education</h2>
+      <ol class="timeline" data-field="experience"><span class="timeline__line" aria-hidden="true"><i></i></span></ol>
+    </section>
+
+    <section class="contact section" id="contact" aria-labelledby="contact-title">
+      <p class="eyebrow">05 — Contact</p>
+      <h2 id="contact-title" class="contact__title"><span data-split>Let's build</span><span data-split class="grad-text">something great.</span></h2>
+      <div class="contact__actions" data-field="contact"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© <span data-field="year"></span> <span data-field="name"></span>. Built with Three.js, GSAP &amp; modern CSS.</p>
+    <a href="#top" class="footer__top" data-magnetic>Back to top ↑</a>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
