@@ -16,19 +16,19 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face{font-family:G;src:url(data:font/woff2;base64,${geist}) format('woff2');font-weight:100 900}
 @font-face{font-family:M;src:url(data:font/woff2;base64,${mono}) format('woff2');font-weight:100 900}
 @page{size:A4;margin:13mm 15mm 11mm}
-*{box-sizing:border-box}body{margin:0;font:400 9.2pt/1.45 G,sans-serif;color:#1d1f27;letter-spacing:-.005em}
+*{box-sizing:border-box}body{margin:0;font:400 9.2pt/1.45 G,sans-serif;color:#2E2A54;letter-spacing:-.005em}
 a{color:inherit;text-decoration:none}
-header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.5px solid #1d1f27;padding-bottom:10pt;margin-bottom:14pt}
+header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #FFCBA4;padding-bottom:10pt;margin-bottom:14pt}
 h1{white-space:nowrap;font-size:22pt;font-weight:650;letter-spacing:-.035em;margin:0;line-height:1.05}
-.role{font-size:11pt;color:#3b5bdb;font-weight:550;margin-top:3pt}
+.role{font-size:11pt;color:#5A4FCF;font-weight:550;margin-top:3pt}
 .contact{text-align:right;font:400 7.6pt/1.6 M,monospace;color:#4a4f5e}
-h2{font:600 7.8pt/1 M,monospace;letter-spacing:.14em;text-transform:uppercase;color:#3b5bdb;margin:13pt 0 6pt;display:flex;gap:8pt;align-items:center}
-h2::after{content:'';flex:1;height:.6pt;background:#d9dbe3}
+h2{font:600 7.8pt/1 M,monospace;letter-spacing:.14em;text-transform:uppercase;color:#5A4FCF;margin:13pt 0 6pt;display:flex;gap:8pt;align-items:center}
+h2::after{content:'';flex:1;height:.8pt;background:#E4E0FA}
 .summary{color:#2c2f3a}
 .skills{display:grid;grid-template-columns:repeat(2,1fr);gap:4pt 18pt}
 .skills b{font-weight:600}
 .job{margin-bottom:9pt;break-inside:avoid}.job .top{display:flex;justify-content:space-between;align-items:baseline}
-.job h3{font-size:10.4pt;margin:0;font-weight:600;letter-spacing:-.015em}.job .co{color:#3b5bdb;font-weight:550}
+.job h3{font-size:10.4pt;margin:0;font-weight:600;letter-spacing:-.015em}.job .co{color:#5A4FCF;font-weight:550}
 .when{font:400 8pt M,monospace;color:#5d6273}
 ul{margin:3pt 0 0;padding-left:12pt}li{margin:1.5pt 0;color:#2c2f3a}
 .proj{margin-bottom:6pt;break-inside:avoid}.proj b{font-weight:600}.proj .s{font:400 7.6pt M,monospace;color:#5d6273}

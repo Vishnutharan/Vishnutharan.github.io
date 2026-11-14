@@ -48,7 +48,7 @@ export function initHero3D(canvas, { lite = false, reduced = false } = {}) {
   const uniforms = {
     uTime: { value: 0 }, uScroll: { value: 0 }, uMouse: { value: new THREE.Vector2() },
     uBase: { value: new THREE.Color() }, uAccent: { value: new THREE.Color() },
-    uSize: { value: 2.2 * renderer.getPixelRatio() }, uAlpha: { value: 1 },
+    uSize: { value: 3.1 * renderer.getPixelRatio() }, uAlpha: { value: 1 },
   };
   const mat = new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false,
@@ -75,8 +75,8 @@ export function initHero3D(canvas, { lite = false, reduced = false } = {}) {
       varying float vRim; varying float vN; varying float vDepth;
       void main(){
         float d = length(gl_PointCoord - .5); if (d > .5) discard;
-        vec3 col = mix(uBase, uAccent, smoothstep(.45, 1., vRim) * .9 + smoothstep(.2, .8, vN) * .35);
-        float a = smoothstep(.5, .15, d) * mix(.18, 1., vDepth) * uAlpha;
+        vec3 col = mix(uBase, uAccent, clamp(smoothstep(-.4, .8, vN) * .8 + smoothstep(.6, 1., vRim) * .3, 0., 1.));
+        float a = smoothstep(.5, .1, d) * mix(.25, .95, vDepth) * uAlpha;
         gl_FragColor = vec4(col, a);
       }`,
   });
@@ -85,7 +85,7 @@ export function initHero3D(canvas, { lite = false, reduced = false } = {}) {
   group.add(sphere);
 
   // thin orbit rings
-  const ringMat = new THREE.LineBasicMaterial({ transparent: true, opacity: .14 });
+  const ringMat = new THREE.LineBasicMaterial({ transparent: true, opacity: .12 });
   [2.5, 3.1].forEach((rad, i) => {
     const pts = []; for (let k = 0; k <= 256; k++) { const a = (k / 256) * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * rad, 0, Math.sin(a) * rad)); }
     const ring = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), ringMat);
@@ -94,12 +94,13 @@ export function initHero3D(canvas, { lite = false, reduced = false } = {}) {
   });
   scene.add(group);
 
-  const setTheme = (theme) => {
-    const light = theme === 'light';
-    uniforms.uBase.value.set(light ? '#3a3d4a' : '#c9ccd6');
-    uniforms.uAccent.value.set(light ? '#3b5bdb' : '#7aa2ff');
-    mat.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
-    ringMat.color.set(light ? '#1f2230' : '#ffffff');
+  const setTheme = () => {
+    const cs = getComputedStyle(document.documentElement);
+    const v = (n, d) => (cs.getPropertyValue(n).trim() || d);
+    uniforms.uBase.value.set(v('--sphere-a', '#8E82FE'));
+    uniforms.uAccent.value.set(v('--sphere-b', '#FF9F6E'));
+    mat.blending = THREE.NormalBlending;
+    ringMat.color.set(v('--sphere-ring', '#2E2A54'));
   };
   setTheme(document.documentElement.dataset.theme);
 

@@ -22,8 +22,8 @@ $$('[data-photo]').forEach((el) => {
 /* ─── Theme toggle with View Transitions circular reveal ─── */
 let hero3d = null;
 $('.theme-toggle').addEventListener('click', (e) => {
-  const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-  const apply = () => { document.documentElement.dataset.theme = next; try { localStorage.setItem('theme', next); } catch {} hero3d?.setTheme(next); };
+  const next = document.documentElement.dataset.theme === 'mist' ? 'dawn' : 'mist';
+  const apply = () => { document.documentElement.dataset.theme = next; try { localStorage.setItem('palette', next); } catch {} hero3d?.setTheme(next); };
   if (!document.startViewTransition || reduced) return apply();
   const r = e.currentTarget.getBoundingClientRect(); const x = r.left + r.width / 2, y = r.top + r.height / 2;
   const rad = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));

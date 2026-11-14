@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="en-GB" data-theme="dark">
+<html lang="en-GB" data-theme="dawn">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>%TITLE%</title>
   <meta name="description" content="%DESCRIPTION%" />
   <meta name="author" content="%NAME%" />
-  <meta name="theme-color" content="#0b0b0e" />
-  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#FFFAF5" />
+  <meta name="color-scheme" content="light" />
   <link rel="canonical" href="%URL%" />
   <meta property="og:type" content="profile" />
   <meta property="og:title" content="%TITLE%" />
@@ -17,9 +17,9 @@
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="%TITLE%" />
   <meta name="twitter:description" content="%DESCRIPTION%" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0b0e'/%3E%3Crect x='1' y='1' width='62' height='62' rx='13' fill='none' stroke='%23ffffff22'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='700' font-size='26' fill='%23fff'%3EVK%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FFCBA4'/%3E%3Crect width='64' height='64' rx='14' fill='%23CCCCFF' opacity='.7'/%3E%3Ctext x='50%25' y='60%25' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='700' font-size='26' fill='%232E2A54'%3EVK%3C/text%3E%3C/svg%3E" />
   <script>
-    try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+    try { const t = localStorage.getItem('palette'); if (t === 'mist') document.documentElement.dataset.theme = t; } catch (e) {}
     document.documentElement.classList.add('js');
   </script>
   <script type="application/ld+json"><!--slot:jsonld--></script>
@@ -43,8 +43,8 @@
       </ul>
     </nav>
     <div class="nav__actions">
-      <button class="icon-btn theme-toggle" type="button" aria-label="Toggle colour theme">
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle class="sun" cx="12" cy="12" r="4.5"/><g class="rays"><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></svg>
+      <button class="icon-btn theme-toggle" type="button" aria-label="Switch colour palette (Periwinkle Dawn / Sage Mist)" title="Switch palette">
+        <span class="sw sw--a" aria-hidden="true"></span><span class="sw sw--b" aria-hidden="true"></span>
       </button>
       <a class="btn btn--sm btn--primary" href="#contact">Contact</a>
     </div>
