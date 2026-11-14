@@ -21,138 +21,122 @@ float snoise(vec3 v){
   return 42.*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));}
 `;
 
+
+/**
+ * Elegant point-cloud sphere: Fibonacci-distributed dots, gently displaced by simplex noise,
+ * neutral tone with an accent rim. Reacts subtly to pointer and scroll.
+ */
 export function initHero3D(canvas, { lite = false, reduced = false } = {}) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !lite, alpha: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, lite ? 1.25 : 2));
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, lite ? 1.5 : 2));
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-  camera.position.set(0, 0, 6);
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+  camera.position.set(0, 0, 7);
+
+  const N = lite ? 2600 : 7000;
+  const pos = new Float32Array(N * 3), rnd = new Float32Array(N);
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < N; i++) {
+    const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), th = golden * i;
+    pos.set([Math.cos(th) * r, y, Math.sin(th) * r], i * 3);
+    rnd[i] = Math.random();
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('aRnd', new THREE.BufferAttribute(rnd, 1));
 
   const uniforms = {
     uTime: { value: 0 }, uScroll: { value: 0 }, uMouse: { value: new THREE.Vector2() },
-    uColA: { value: new THREE.Color() }, uColB: { value: new THREE.Color() }, uColC: { value: new THREE.Color() },
-    uLight: { value: 0 },
+    uBase: { value: new THREE.Color() }, uAccent: { value: new THREE.Color() },
+    uSize: { value: 2.2 * renderer.getPixelRatio() }, uAlpha: { value: 1 },
   };
-
-  // ── Morphing blob ──
-  const blobGeo = new THREE.IcosahedronGeometry(1.5, lite ? 48 : 128);
-  const blobMat = new THREE.ShaderMaterial({
-    uniforms,
+  const mat = new THREE.ShaderMaterial({
+    uniforms, transparent: true, depthWrite: false,
     vertexShader: noise + /* glsl */ `
-      uniform float uTime, uScroll; uniform vec2 uMouse;
-      varying float vN; varying vec3 vNormal; varying vec3 vView;
+      uniform float uTime, uScroll, uSize; uniform vec2 uMouse; attribute float aRnd;
+      varying float vRim; varying float vN; varying float vDepth;
       void main(){
-        float t = uTime * .25;
-        float amp = .28 + uScroll * .55 + length(uMouse) * .12;
-        float n = snoise(normal * (1.1 + uScroll * 1.5) + vec3(t, t*.7, uMouse.x*.6));
-        n += .45 * snoise(normal * 3. + t * 1.4);
+        vec3 p = position;
+        float t = uTime * .12;
+        float n = snoise(p * 1.6 + vec3(t, t * .8, uMouse.x * .3));
         vN = n;
-        vec3 pos = position + normal * n * amp;
-        vec4 mv = modelViewMatrix * vec4(pos, 1.);
-        vNormal = normalize(normalMatrix * normal); vView = normalize(-mv.xyz);
+        float r = 1.75 + n * (.12 + uScroll * .35) ;
+        p *= r;
+        p += normalize(position) * uScroll * aRnd * 1.6; // gentle dispersal on scroll
+        vec4 mv = modelViewMatrix * vec4(p, 1.);
+        vec3 nrm = normalize(normalMatrix * position);
+        vRim = 1. - abs(dot(nrm, vec3(0., 0., 1.)));
+        vDepth = smoothstep(-9.5, -5., mv.z);
+        gl_PointSize = uSize * (0.7 + aRnd * .6) * (7. / -mv.z);
         gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader: /* glsl */ `
-      uniform vec3 uColA, uColB, uColC; uniform float uTime, uLight;
-      varying float vN; varying vec3 vNormal; varying vec3 vView;
+      uniform vec3 uBase, uAccent; uniform float uAlpha;
+      varying float vRim; varying float vN; varying float vDepth;
       void main(){
-        float fres = pow(1. - max(dot(vNormal, vView), 0.), 2.2);
-        vec3 col = mix(uColA, uColB, smoothstep(-.6, .8, vN));
-        col = mix(col, uColC, fres);
-        float bands = .5 + .5 * sin(vN * 14. + uTime);
-        col += bands * .06;
-        gl_FragColor = vec4(col, mix(.92, .85, uLight));
+        float d = length(gl_PointCoord - .5); if (d > .5) discard;
+        vec3 col = mix(uBase, uAccent, smoothstep(.45, 1., vRim) * .9 + smoothstep(.2, .8, vN) * .35);
+        float a = smoothstep(.5, .15, d) * mix(.18, 1., vDepth) * uAlpha;
+        gl_FragColor = vec4(col, a);
       }`,
-    transparent: true,
   });
-  const blob = new THREE.Mesh(blobGeo, blobMat);
-  scene.add(blob);
+  const sphere = new THREE.Points(geo, mat);
+  const group = new THREE.Group();
+  group.add(sphere);
 
-  // ── Particle field ──
-  const count = lite ? 900 : 2600;
-  const pos = new Float32Array(count * 3);
-  const seed = new Float32Array(count);
-  for (let i = 0; i < count; i++) {
-    const r = 3 + Math.random() * 7, th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
-    pos.set([r * Math.sin(ph) * Math.cos(th), r * Math.sin(ph) * Math.sin(th), r * Math.cos(ph) - 2], i * 3);
-    seed[i] = Math.random();
-  }
-  const pGeo = new THREE.BufferGeometry();
-  pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  pGeo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
-  const pMat = new THREE.ShaderMaterial({
-    uniforms: { ...uniforms, uSize: { value: 26 * renderer.getPixelRatio() } },
-    vertexShader: /* glsl */ `
-      uniform float uTime, uScroll, uSize; attribute float aSeed; varying float vSeed;
-      void main(){
-        vec3 p = position; float a = uTime * .05 * (aSeed + .3) + uScroll * 2.;
-        p.xz = mat2(cos(a), -sin(a), sin(a), cos(a)) * p.xz;
-        p.y += sin(uTime * .5 + aSeed * 20.) * .15 - uScroll * 1.5;
-        vec4 mv = modelViewMatrix * vec4(p, 1.); vSeed = aSeed;
-        gl_PointSize = uSize * (.3 + aSeed) / -mv.z; gl_Position = projectionMatrix * mv;
-      }`,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uColA, uColC; varying float vSeed;
-      void main(){ float d = length(gl_PointCoord - .5); if (d > .5) discard;
-        gl_FragColor = vec4(mix(uColA, uColC, vSeed), smoothstep(.5, 0., d) * .8); }`,
-    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  // thin orbit rings
+  const ringMat = new THREE.LineBasicMaterial({ transparent: true, opacity: .14 });
+  [2.5, 3.1].forEach((rad, i) => {
+    const pts = []; for (let k = 0; k <= 256; k++) { const a = (k / 256) * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * rad, 0, Math.sin(a) * rad)); }
+    const ring = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), ringMat);
+    ring.rotation.x = Math.PI / 2.25 + i * .25; ring.rotation.z = i * .5;
+    group.add(ring);
   });
-  const points = new THREE.Points(pGeo, pMat);
-  scene.add(points);
+  scene.add(group);
 
-  // theme-aware palette
   const setTheme = (theme) => {
     const light = theme === 'light';
-    uniforms.uLight.value = light ? 1 : 0;
-    uniforms.uColA.value.set(light ? '#7c4dff' : '#6d3cf5');
-    uniforms.uColB.value.set(light ? '#ff5fa2' : '#e8479a');
-    uniforms.uColC.value.set(light ? '#14b8d4' : '#5ee7ff');
-    pMat.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+    uniforms.uBase.value.set(light ? '#3a3d4a' : '#c9ccd6');
+    uniforms.uAccent.value.set(light ? '#3b5bdb' : '#7aa2ff');
+    mat.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending;
+    ringMat.color.set(light ? '#1f2230' : '#ffffff');
   };
   setTheme(document.documentElement.dataset.theme);
 
-  const state = { scroll: 0, mouse: new THREE.Vector2(), target: new THREE.Vector2() };
-  let wide = true, baseX = 1.6, baseY = 0;
+  let wide = true, baseX = 2.2, baseY = 0;
   const resize = () => {
-    const w = window.innerWidth, h = window.innerHeight;
+    const w = innerWidth, h = innerHeight;
     renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
-    wide = w > 900; baseX = wide ? 1.6 : 0; baseY = wide ? 0 : 1.2;
-    blob.scale.setScalar(w > 900 ? 1 : 0.75);
+    wide = w > 960; baseX = wide ? 2.5 : 0.9; baseY = wide ? 0 : 1.6;
+    group.scale.setScalar(wide ? .86 : .72);
+    uniforms.uAlpha.value = wide ? 1 : .55;
   };
-  resize();
-  window.addEventListener('resize', resize);
-  window.addEventListener('pointermove', (e) => {
-    state.target.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
-  }, { passive: true });
+  resize(); addEventListener('resize', resize);
 
+  const target = new THREE.Vector2(), mouse = new THREE.Vector2();
+  addEventListener('pointermove', (e) => target.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), { passive: true });
+
+  let scroll = 0, visible = true, inView = true;
   const clock = new THREE.Clock();
-  let visible = true, raf;
   document.addEventListener('visibilitychange', () => { visible = !document.hidden; if (visible) loop(); });
-  function loop() {
-    if (!visible) return;
+  function frame() {
     const t = clock.getElapsedTime();
-    state.mouse.lerp(state.target, 0.05);
+    mouse.lerp(target, .04);
     uniforms.uTime.value = reduced ? 0 : t;
-    uniforms.uMouse.value.copy(state.mouse);
-    uniforms.uScroll.value += (state.scroll - uniforms.uScroll.value) * 0.08;
+    uniforms.uMouse.value.copy(mouse);
+    uniforms.uScroll.value += (scroll - uniforms.uScroll.value) * .07;
     const s = uniforms.uScroll.value;
-    blob.rotation.y = t * 0.1 + state.mouse.x * 0.4 + s * 2.5;
-    blob.rotation.x = state.mouse.y * 0.3 + s * 1.2;
-    // drift to the right edge and recede as the page scrolls past the hero
-    const k = Math.min(s * 6, 1);
-    blob.position.x = baseX + k * (wide ? 1.9 : 1.2);
-    blob.position.y = baseY - k * (wide ? 0.4 : 1.4);
-    blob.position.z = -k * 2.2 - s * 1.5;
-    camera.position.x += (state.mouse.x * 0.3 - camera.position.x) * 0.05;
-    camera.position.y += (state.mouse.y * 0.2 - camera.position.y) * 0.05;
-    camera.lookAt(0, 0, 0);
+    group.rotation.y = t * .05 + mouse.x * .25 + s * 1.2;
+    group.rotation.x = .25 + mouse.y * .15 + s * .4;
+    group.position.set(baseX, baseY + s * 1.2, -s * 2);
     renderer.render(scene, camera);
-    if (!reduced) raf = requestAnimationFrame(loop);
   }
+  function loop() { if (!visible || !inView) return; frame(); if (!reduced) requestAnimationFrame(loop); }
   loop();
 
   return {
-    setScroll(v) { state.scroll = v; if (reduced) loop(); },
-    setTheme(t) { setTheme(t); if (reduced) loop(); },
+    setScroll(v) { scroll = v; if (reduced) frame(); },
+    setTheme(t) { setTheme(t); frame(); },
+    setActive(v) { const was = inView; inView = v; if (v && !was) loop(); },
   };
 }

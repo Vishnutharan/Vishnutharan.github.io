@@ -1,28 +1,28 @@
-# Vishnutharan Karunakaran — Immersive Portfolio (v1)
+# Vishnutharan Karunakaran — Portfolio
 
-Vite + Three.js + GSAP ScrollTrigger + Lenis, with modern CSS.
+Live: https://vishnutharan.github.io/
+
+Vite + Three.js + GSAP ScrollTrigger + Lenis, Geist / Instrument Serif type, modern CSS.
 
 ## Run
 ```bash
 npm install
-npm run dev      # local dev server
-npm run build    # production build → dist/
-npm run preview  # serve the build
+npm run dev       # local dev server
+npm run build     # production build -> dist/
+npm run preview   # serve the build
+npm run cv        # regenerate public/cv/Vishnutharan-Karunakaran-CV.pdf from src/content.js (needs: npx playwright install chromium)
 ```
 
 ## Edit content
-**Everything** (name, role, tagline, about, skills, projects, experience, socials, email, SEO meta) is in
-`src/content.js`. Anything in `[square brackets]` is a placeholder to replace.
+All content (from the CV + GitHub) lives in `src/content.js` and is pre-rendered into the HTML at build time (`src/render.js`, `vite.config.js`).
+Phone number and home address are deliberately not published.
 
 ## Photos
-See `public/assets/photos/README.md`. Replace `hero.webp` and `about.webp`.
+Add `public/assets/photos/hero.webp` (used in the hero pill avatar) and `public/assets/photos/about.webp` (About portrait).
+Until they exist a monogram treatment is shown. `python3 scripts/optimize_photos.py photo.jpg` creates both.
 
-## What's inside
-- **3D hero** (`src/hero3d.js`): simplex-noise shader blob + particle field; reacts to mouse & scroll; lighter geometry/particles on mobile or low-core devices; lazy-loaded after idle; paused when tab hidden; static frame under reduced motion.
-- **Scroll**: Lenis smooth scroll, GSAP pinned horizontal projects rail with 3D card entrances (containerAnimation), scrubbed text fills, parallax hero, clip-path photo reveals, timeline progress line.
-- **Modern CSS**: `animation-timeline: scroll()/view()` (with `@supports` fallbacks), View Transitions API circular theme reveal, `@property` animated conic gradients, container queries, `clamp()` fluid type, `:has()`, `oklch()` + `color-mix()`, native nesting.
-- **Extras**: preloader, custom blend-mode cursor, magnetic buttons, 3D tilt photos, split-text reveals, dark/light theme (persisted, no flash), marquee, scroll progress bar, hide-on-scroll nav with active section, skip link, JSON-LD + Open Graph meta, `prefers-reduced-motion` support, native scroll-snap projects on mobile.
-
-## Deploy (not done yet)
-- **GitHub Pages**: push to a repo (e.g. `Vishnutharan.github.io`), build with a Pages Action and publish `dist/` (`base: './'` is already set).
-- **Vercel / Netlify**: import the repo; build command `npm run build`, output `dist`.
+## Deploy (GitHub Pages, branch-based)
+```bash
+npm run build && touch dist/.nojekyll
+# push the contents of dist/ to the gh-pages branch
+```
