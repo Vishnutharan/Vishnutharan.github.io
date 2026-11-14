@@ -28,12 +28,12 @@ float snoise(vec3 v){
  */
 export function initHero3D(canvas, { lite = false, reduced = false } = {}) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, lite ? 1.5 : 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, lite ? 1 : 1.25));
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
   camera.position.set(0, 0, 7);
 
-  const N = lite ? 2600 : 7000;
+  const N = lite ? 1800 : 4200;
   const pos = new Float32Array(N * 3), rnd = new Float32Array(N);
   const golden = Math.PI * (3 - Math.sqrt(5));
   for (let i = 0; i < N; i++) {
@@ -48,7 +48,7 @@ export function initHero3D(canvas, { lite = false, reduced = false } = {}) {
   const uniforms = {
     uTime: { value: 0 }, uScroll: { value: 0 }, uMouse: { value: new THREE.Vector2() },
     uBase: { value: new THREE.Color() }, uAccent: { value: new THREE.Color() },
-    uSize: { value: 3.1 * renderer.getPixelRatio() }, uAlpha: { value: 1 },
+    uSize: { value: 3.6 * renderer.getPixelRatio() }, uAlpha: { value: 1 },
   };
   const mat = new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false,
@@ -87,7 +87,7 @@ export function initHero3D(canvas, { lite = false, reduced = false } = {}) {
   // thin orbit rings
   const ringMat = new THREE.LineBasicMaterial({ transparent: true, opacity: .12 });
   [2.5, 3.1].forEach((rad, i) => {
-    const pts = []; for (let k = 0; k <= 256; k++) { const a = (k / 256) * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * rad, 0, Math.sin(a) * rad)); }
+    const pts = []; for (let k = 0; k <= 128; k++) { const a = (k / 128) * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * rad, 0, Math.sin(a) * rad)); }
     const ring = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), ringMat);
     ring.rotation.x = Math.PI / 2.25 + i * .25; ring.rotation.z = i * .5;
     group.add(ring);
@@ -119,7 +119,7 @@ export function initHero3D(canvas, { lite = false, reduced = false } = {}) {
 
   let scroll = 0, visible = true, inView = true;
   const clock = new THREE.Clock();
-  document.addEventListener('visibilitychange', () => { visible = !document.hidden; if (visible) loop(); });
+  document.addEventListener('visibilitychange', () => { visible = !document.hidden; if (visible) kick(); });
   function frame() {
     const t = clock.getElapsedTime();
     mouse.lerp(target, .04);
@@ -132,12 +132,21 @@ export function initHero3D(canvas, { lite = false, reduced = false } = {}) {
     group.position.set(baseX, baseY + s * 1.2, -s * 2);
     renderer.render(scene, camera);
   }
-  function loop() { if (!visible || !inView) return; frame(); if (!reduced) requestAnimationFrame(loop); }
-  loop();
+  // frame-rate cap: 30fps on low-end/mobile, 60 elsewhere; skip frames instead of rendering every rAF
+  const minDt = lite ? 1000 / 30 : 1000 / 60 - 1;
+  let last = 0, running = false;
+  function loop(now = performance.now()) {
+    if (!visible || !inView || reduced) { running = false; return; }
+    running = true;
+    if (now - last >= minDt) { last = now; frame(); }
+    requestAnimationFrame(loop);
+  }
+  const kick = () => { if (!running) requestAnimationFrame(loop); };
+  frame(); kick();
 
   return {
     setScroll(v) { scroll = v; if (reduced) frame(); },
     setTheme(t) { setTheme(t); frame(); },
-    setActive(v) { const was = inView; inView = v; if (v && !was) loop(); },
+    setActive(v) { inView = v; if (v) kick(); },
   };
 }

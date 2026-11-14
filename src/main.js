@@ -2,7 +2,6 @@ import './styles.css';
 import { content as C } from './content.js';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Lenis from 'lenis';
 
 gsap.registerPlugin(ScrollTrigger);
 const $ = (s, r = document) => r.querySelector(s);
@@ -32,39 +31,43 @@ $('.theme-toggle').addEventListener('click', (e) => {
     { duration: 650, easing: 'cubic-bezier(.16,1,.3,1)', pseudoElement: '::view-transition-new(root)' }));
 });
 
-/* ─── Smooth scroll ─── */
-let lenis = null;
-if (!reduced) {
-  lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
-  lenis.on('scroll', ScrollTrigger.update);
-  gsap.ticker.add((t) => lenis.raf(t * 1000));
-  gsap.ticker.lagSmoothing(0);
-}
+/* ─── Scrolling: native (compositor-driven, smooth even when the main thread is busy) ─── */
+ScrollTrigger.config({ ignoreMobileResize: true });
 $$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
-  const id = a.getAttribute('href'); const target = id === '#top' ? 0 : $(id);
-  if (target == null) return; e.preventDefault();
-  if (lenis) lenis.scrollTo(target, { offset: id === '#top' ? 0 : -72, duration: 1.2 });
-  else target === 0 ? scrollTo(0, 0) : target.scrollIntoView();
+  const id = a.getAttribute('href'); const target = id === '#top' ? null : $(id);
+  if (id !== '#top' && !target) return; e.preventDefault();
+  const top = target ? target.getBoundingClientRect().top + scrollY - 72 : 0;
+  scrollTo({ top, behavior: reduced ? 'auto' : 'smooth' });
 }));
 
 /* ─── Nav: glass after scroll, hide on scroll down, active section ─── */
-const nav = $('.nav'); let lastY = 0;
+const nav = $('.nav'); let lastY = 0, navTick = false, scrolled = null, hidden = false;
 const onScroll = () => {
-  const y = scrollY;
-  nav.classList.toggle('is-scrolled', y > 24);
-  nav.classList.toggle('is-hidden', y > lastY + 4 && y > 600);
-  if (y < lastY - 4) nav.classList.remove('is-hidden');
+  navTick = false;
+  const y = scrollY, s = y > 24;
+  if (s !== scrolled) { scrolled = s; nav.classList.toggle('is-scrolled', s); }
+  const h = y > 600 && (y > lastY + 4 ? true : y < lastY - 4 ? false : hidden);
+  if (h !== hidden) { hidden = h; nav.classList.toggle('is-hidden', h); }
   lastY = y;
 };
-addEventListener('scroll', onScroll, { passive: true }); onScroll();
+addEventListener('scroll', () => { if (!navTick) { navTick = true; requestAnimationFrame(onScroll); } }, { passive: true }); onScroll();
+
+/* ─── Pause the tech ticker when it is off-screen ─── */
+const stack = $('.stack');
+new IntersectionObserver(([e]) => stack.classList.toggle('is-off', !e.isIntersecting)).observe(stack);
 
 
 /* ─── Spotlight cards (pointer-tracked radial glow, @property vars) ─── */
 if (finePointer) {
+  let pending = null;
   document.addEventListener('pointermove', (e) => {
     const card = e.target.closest?.('.spot'); if (!card) return;
-    const r = card.getBoundingClientRect();
-    card.style.setProperty('--mx', `${e.clientX - r.left}px`); card.style.setProperty('--my', `${e.clientY - r.top}px`);
+    if (!pending) requestAnimationFrame(() => {
+      const { card: c, x, y } = pending; pending = null;
+      const r = c.getBoundingClientRect();
+      c.style.setProperty('--mx', `${x - r.left}px`); c.style.setProperty('--my', `${y - r.top}px`);
+    });
+    pending = { card, x: e.clientX, y: e.clientY };
   }, { passive: true });
 }
 
@@ -85,7 +88,8 @@ const canvas = $('.webgl');
 const webgl = (() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } })();
 if (webgl) {
   const start = () => import('./hero3d.js').then(({ initHero3D }) => {
-    hero3d = initHero3D(canvas, { lite: isMobile || (navigator.hardwareConcurrency || 8) <= 4, reduced });
+    const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+    hero3d = initHero3D(canvas, { lite: isMobile || lowEnd, reduced });
     canvas.classList.add('is-ready');
     ScrollTrigger.create({
       trigger: '.hero', start: 'top top', end: () => `+=${innerHeight * 1.3}`,
@@ -107,7 +111,7 @@ if (!reduced) {
 
 /* ─── Scroll choreography (subtle) ─── */
 if (!reduced) {
-  gsap.to('.hero__inner', { y: -60, opacity: .35, ease: 'none', scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
+  gsap.to('.hero__inner', { y: -60, opacity: .35, ease: 'none', force3D: true, scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true } });
 
   // headings: word mask reveal
   $$('.section .h2, .contact__title').forEach((h) => {
@@ -131,9 +135,9 @@ gsap.matchMedia().add({ desk: '(min-width: 901px) and (prefers-reduced-motion: n
   if (ctx.conditions.native) { sec.classList.add('is-native'); return () => sec.classList.remove('is-native'); }
   const dist = () => Math.max(0, track.scrollWidth - innerWidth);
   const tween = gsap.to(track, { x: () => -dist(), ease: 'none', scrollTrigger: {
-    trigger: sec, pin: '.projects__pin', start: 'top top', end: () => `+=${dist()}`, scrub: .8, invalidateOnRefresh: true, anticipatePin: 1,
+    trigger: sec, pin: '.projects__pin', start: 'top top', end: () => `+=${dist()}`, scrub: true, invalidateOnRefresh: true, anticipatePin: 1, fastScrollEnd: true,
     onUpdate: (st) => bar.style.setProperty('--p', st.progress) } });
-  $$('.project', track).forEach((card) => gsap.from(card, { opacity: .35, y: 24, ease: 'none', scrollTrigger: { trigger: card, containerAnimation: tween, start: 'left 100%', end: 'left 75%', scrub: true } }));
+  $$('.project', track).forEach((card) => gsap.from(card, { opacity: .4, ease: 'none', scrollTrigger: { trigger: card, containerAnimation: tween, start: 'left 100%', end: 'left 75%', scrub: true } }));
 });
 
 function splitWords(el) {
