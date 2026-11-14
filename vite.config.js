@@ -15,7 +15,7 @@ const metaPlugin = () => ({
 });
 
 export default defineConfig({
-  base: './',
+  base: '/',
   plugins: [metaPlugin()],
   build: { target: 'es2022', chunkSizeWarningLimit: 800 },
 });
